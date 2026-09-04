@@ -1,26 +1,32 @@
 from document_loader import load_documents
 
 
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 150
+
+
 def split_documents():
+    """
+    Split loaded documents into overlapping chunks
+    while preserving source metadata.
+    """
 
     documents = load_documents()
 
     chunks = []
 
-    chunk_size = 1000
-    overlap = 150
-
     for document in documents:
 
         text = document["text"]
         filename = document["filename"]
+        page = document.get("page", "Unknown")
 
         start = 0
         chunk_id = 0
 
         while start < len(text):
 
-            end = start + chunk_size
+            end = start + CHUNK_SIZE
 
             chunk = text[start:end].strip()
 
@@ -28,13 +34,17 @@ def split_documents():
                 chunks.append({
                     "text": chunk,
                     "filename": filename,
+                    "page": page,
                     "chunk_id": chunk_id
                 })
 
             chunk_id += 1
-            start += chunk_size - overlap
+            start += CHUNK_SIZE - CHUNK_OVERLAP
 
-    print(f"\nTotal chunks created: {len(chunks)}")
+    print(
+        f"\nTotal chunks created: "
+        f"{len(chunks)}"
+    )
 
     return chunks
 
