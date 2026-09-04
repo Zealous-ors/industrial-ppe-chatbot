@@ -40,20 +40,25 @@ def create_vector_store():
         name=COLLECTION_NAME
     )
 
+    ids = [
+        f"{chunk['filename']}_{chunk['page']}_{chunk['chunk_id']}"
+        for chunk in chunks
+    ]
+
+    metadatas = [
+        {
+            "filename": chunk["filename"],
+            "page": chunk.get("page", "Unknown"),
+            "chunk_id": chunk["chunk_id"]
+        }
+        for chunk in chunks
+    ]
+
     collection.upsert(
-        ids=[
-            str(i)
-            for i in range(len(chunks))
-        ],
+        ids=ids,
         documents=texts,
         embeddings=embeddings,
-        metadatas=[
-            {
-                "filename": chunk["filename"],
-                "chunk_id": chunk["chunk_id"]
-            }
-            for chunk in chunks
-        ]
+        metadatas=metadatas
     )
 
     print(
