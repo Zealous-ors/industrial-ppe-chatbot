@@ -5,15 +5,30 @@ from text_splitter import split_documents
 
 
 VECTOR_DB_PATH = "vector_db"
+COLLECTION_NAME = "industrial_ppe"
 
 
 def create_vector_store():
+    """
+    Create or update the ChromaDB vector store
+    using the industrial PPE knowledge base.
+    """
 
     chunks = split_documents()
 
-    texts = [chunk["text"] for chunk in chunks]
+    if not chunks:
+        print("No documents found to index.")
+        return None
 
-    print(f"Creating embeddings for {len(texts)} chunks...")
+    texts = [
+        chunk["text"]
+        for chunk in chunks
+    ]
+
+    print(
+        f"Creating embeddings for "
+        f"{len(texts)} chunks..."
+    )
 
     embeddings = create_embeddings(texts)
 
@@ -22,11 +37,14 @@ def create_vector_store():
     )
 
     collection = client.get_or_create_collection(
-        name="industrial_ppe"
+        name=COLLECTION_NAME
     )
 
-    collection.add(
-        ids=[str(i) for i in range(len(chunks))],
+    collection.upsert(
+        ids=[
+            str(i)
+            for i in range(len(chunks))
+        ],
         documents=texts,
         embeddings=embeddings,
         metadatas=[
@@ -38,8 +56,14 @@ def create_vector_store():
         ]
     )
 
-    print(f"Vector database created successfully.")
-    print(f"Total vectors stored: {len(chunks)}")
+    print(
+        "Vector database created/updated successfully."
+    )
+
+    print(
+        f"Total vectors stored: "
+        f"{len(chunks)}"
+    )
 
     return collection
 
