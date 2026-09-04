@@ -21,7 +21,7 @@ def get_collection():
             name=COLLECTION_NAME
         )
 
-    except Exception:
+    except ValueError:
 
         print("Vector database not found. Creating it...")
 
