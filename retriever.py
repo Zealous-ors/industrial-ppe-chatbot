@@ -14,18 +14,32 @@ client = chromadb.PersistentClient(
 
 
 def get_collection():
+    """
+    Get the existing ChromaDB collection.
+
+    If the collection does not exist, create it
+    from the PPE knowledge base.
+    """
 
     try:
-
         return client.get_collection(
             name=COLLECTION_NAME
         )
 
     except ValueError:
 
-        print("Vector database not found. Creating it...")
+        print(
+            "Vector database not found. "
+            "Creating it..."
+        )
 
         chunks = split_documents()
+
+        if not chunks:
+            raise ValueError(
+                "No documents available "
+                "to create the vector database."
+            )
 
         texts = [
             chunk["text"]
@@ -40,20 +54,27 @@ def get_collection():
             name=COLLECTION_NAME
         )
 
+        ids = [
+            f"{chunk['filename']}_"
+            f"{chunk.get('page', 'Unknown')}_"
+            f"{chunk['chunk_id']}"
+            for chunk in chunks
+        ]
+
+        metadatas = [
+            {
+                "filename": chunk["filename"],
+                "page": chunk.get("page", "Unknown"),
+                "chunk_id": chunk["chunk_id"]
+            }
+            for chunk in chunks
+        ]
+
         collection.add(
-            ids=[
-                str(i)
-                for i in range(len(chunks))
-            ],
+            ids=ids,
             documents=texts,
             embeddings=embeddings,
-            metadatas=[
-                {
-                    "filename": chunk["filename"],
-                    "chunk_id": chunk["chunk_id"]
-                }
-                for chunk in chunks
-            ]
+            metadatas=metadatas
         )
 
         print(
@@ -65,6 +86,10 @@ def get_collection():
 
 
 def search_documents(question, top_k=5):
+    """
+    Search the PPE knowledge base using
+    semantic similarity.
+    """
 
     collection = get_collection()
 
@@ -78,3 +103,11 @@ def search_documents(question, top_k=5):
     )
 
     return results
+
+
+if __name__ == "__main__":
+    results = search_documents(
+        "What PPE protects the eyes?"
+    )
+
+    print(results)
